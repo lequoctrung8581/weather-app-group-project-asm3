@@ -306,14 +306,20 @@ async function onUseMyLocation() {
   const windUnit = isMetric ? "m/s" : "mph";
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-sky-100 to-white text-gray-900">
+    <div className={darkMode ? "dark" : ""}>
+    <div className="min-h-screen w-full 
+                    bg-gradient-to-b from-sky-100 to-white text-gray-900
+                    dark:from-gray-900 dark:to-gray-800 dark:text-gray-100
+                    transition-colors duration-300">
       <div className="max-w-4xl mx-auto px-4 py-6">
+        
+        {/* HEADER */}
         <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">☀️ Weather App</h1>
           <div className="flex items-center gap-2">
             <button
               onClick={toggleUnits}
-              className="px-3 py-2 rounded-2xl bg-white/70 shadow border hover:bg-white transition"
+              className="px-3 py-2 rounded-2xl bg-white/70 dark:bg-gray-700 shadow border hover:bg-white dark:hover:bg-gray-600 transition"
               title="Toggle °C/°F"
             >
               Unit: <span className="font-semibold ml-1">{isMetric ? "°C" : "°F"}</span>
@@ -322,130 +328,166 @@ async function onUseMyLocation() {
               onClick={onUseMyLocation}
               className="px-3 py-2 rounded-2xl bg-sky-600 text-white shadow hover:bg-sky-700 transition"
             >📍 Use my location</button>
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="px-3 py-2 rounded-2xl bg-gray-200 dark:bg-gray-700 shadow hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+            >
+              {darkMode ? "☀ Light" : "🌙 Dark"}
+            </button>
           </div>
         </header>
 
+        {/* SEARCH */}
         <form onSubmit={onSearchCity} className="mt-4 flex gap-2">
           <input
             value={cityInput}
             onChange={(e) => setCityInput(e.target.value)}
             placeholder="Enter city (e.g., Hanoi, Ho Chi Minh City, Da Nang)"
-            className="flex-1 px-4 py-3 rounded-2xl bg-white/80 border shadow focus:outline-none focus:ring-2 focus:ring-sky-400"
+            className="flex-1 px-4 py-3 rounded-2xl bg-white/80 dark:bg-gray-800 border shadow 
+                       focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
           <button
             type="submit"
             disabled={!cityInput.trim() || loading}
             className={cls(
               "px-5 py-3 rounded-2xl shadow transition",
-              loading ? "bg-gray-300 text-gray-500" : "bg-gray-900 text-white hover:bg-black"
+              loading 
+                ? "bg-gray-300 text-gray-500 dark:bg-gray-600 dark:text-gray-400"
+                : "bg-gray-900 text-white hover:bg-black dark:bg-sky-600 dark:hover:bg-sky-700"
             )}
           >Search</button>
         </form>
 
         {history.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {history.map((h, i) => (
-              <button
-                key={i}
-                className="px-3 py-1 rounded-full bg-white/70 border shadow hover:bg-white text-sm"
-                onClick={() => { setCityInput(h); setTimeout(() => onSearchCity(), 0); }}
-              >{h}</button>
-            ))}
+  <div className="mt-3 flex flex-wrap gap-2">
+    {history.map((h, i) => (
+      <button
+        key={i}
+        className="px-3 py-1 rounded-full 
+                   bg-white/70 dark:bg-gray-700 
+                   border dark:border-gray-600 
+                   shadow hover:bg-white dark:hover:bg-gray-600 
+                   text-sm text-gray-800 dark:text-gray-200"
+        onClick={() => { setCityInput(h); setTimeout(() => onSearchCity(), 0); }}
+      >{h}</button>
+    ))}
+  </div>
+)}
+
+{error && (
+  <div className="mt-4 p-3 rounded-xl 
+                  bg-red-50 dark:bg-red-900/40 
+                  border border-red-200 dark:border-red-700 
+                  text-red-700 dark:text-red-300">
+    ⚠️ {error}
+  </div>
+)}
+
+{loading && (
+  <div className="mt-6 animate-pulse 
+                  text-gray-600 dark:text-gray-300">
+    Loading weather…
+  </div>
+)}
+
+{/* CURRENT */}
+{current && (
+  <section className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="p-5 rounded-3xl 
+                    bg-white dark:bg-gray-800 
+                    shadow border dark:border-gray-600">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">Location</div>
+          <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            {place?.name}{place?.country ? `, ${place.country}` : ""}
           </div>
-        )}
+        </div>
+        <div className="text-4xl" title={`WMO ${current.weather_code}`}>
+          {wmoToEmoji(current.weather_code)}
+        </div>
+      </div>
+      <div className="mt-4 flex items-end gap-3">
+        <div className="text-5xl font-semibold leading-none text-gray-900 dark:text-white">
+          {Math.round(current.temperature_2m)}{tempUnit}
+        </div>
+        <div className="text-gray-500 dark:text-gray-300">
+          Feels like: {Math.round(current.apparent_temperature)}{tempUnit}
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <div>💧 Humidity: {current.relative_humidity_2m}%</div>
+        <div>🌬️ Wind: {Math.round(current.wind_speed_10m)} {windUnit}</div>
+        <div>🧭 Wind dir: {current.wind_direction_10m}°</div>
+        <div>☔ Rain prob: {current.precipitation_probability ?? 0}%</div>
+      </div>
+    </div>
 
-        {error && (
-          <div className="mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700">
-            ⚠️ {error}
-          </div>
-        )}
+    {/* Extras */}
+    <div className="p-5 rounded-3xl 
+                    bg-white dark:bg-gray-800 
+                    shadow border dark:border-gray-600">
+      <div className="text-sm text-gray-500 dark:text-gray-400">Extras</div>
+      <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <div>🌅 Sunrise: {dailyGroups?.[0]?.sunrise ? formatTimeISO(dailyGroups[0].sunrise) : "-"}</div>
+        <div>🌇 Sunset: {dailyGroups?.[0]?.sunset ? formatTimeISO(dailyGroups[0].sunset) : "-"}</div>
+        <div>🌧️ Precip (this hour): {current.precipitation ?? 0} mm</div>
+        <div>🌧️🌡️ Rain chance: {current.precipitation_probability ?? 0}%</div>
+      </div>
+      <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+        Updated: {new Date().toLocaleString("en-US")}
+      </div>
+    </div>
+  </section>
+)}
 
-        {loading && (
-          <div className="mt-6 animate-pulse text-gray-600">Loading weather…</div>
-        )}
+{/* HOURLY (1h steps) */}
+{hourlyBlocks?.length > 0 && (
+  <section className="mt-6">
+    <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">⏱️ Next 24 hours</h2>
+    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
+      {hourlyBlocks.map((h, idx) => (
+        <div key={idx} className="p-3 rounded-2xl 
+                                 bg-white dark:bg-gray-800 
+                                 border dark:border-gray-600 
+                                 shadow text-center">
+          <div className="text-sm text-gray-500 dark:text-gray-400">{formatTimeISO(h.time)}</div>
+          <div className="text-2xl" title={`WMO ${h.wmo}`}>{wmoToEmoji(h.wmo)}</div>
+          <div className="font-semibold text-gray-900 dark:text-gray-100">{Math.round(h.temp)}{tempUnit}</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 truncate">💧RH {h.rh}% • POP {h.pop ?? 0}%</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">🌬 {Math.round(h.ws ?? 0)} {windUnit} • 🧭 {h.wdir ?? "-"}°</div>
+        </div>
+      ))}
+    </div>
+  </section>
+)}
 
-        {/* CURRENT */}
-        {current && (
-          <section className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-5 rounded-3xl bg-white shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-gray-500">Location</div>
-                  <div className="text-xl font-semibold">
-                    {place?.name}{place?.country ? `, ${place.country}` : ""}
-                  </div>
-                </div>
-                <div className="text-4xl" title={`WMO ${current.weather_code}`}>{wmoToEmoji(current.weather_code)}</div>
-              </div>
-              <div className="mt-4 flex items-end gap-3">
-                <div className="text-5xl font-semibold leading-none">
-                  {Math.round(current.temperature_2m)}{tempUnit}
-                </div>
-                <div className="text-gray-500">
-                  Feels like: {Math.round(current.apparent_temperature)}{tempUnit}
-                </div>
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-gray-700">
-                <div>💧 Humidity: {current.relative_humidity_2m}%</div>
-                <div>🌬️ Wind: {Math.round(current.wind_speed_10m)} {windUnit}</div>
-                <div>🧭 Wind dir: {current.wind_direction_10m}°</div>
-                <div>☔ Rain prob: {current.precipitation_probability ?? 0}%</div>
-              </div>
-            </div>
+{/* DAILY (compact) */}
+{dailyGroups?.length > 0 && (
+  <section className="mt-6">
+    <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">📅 5-day forecast</h2>
+    <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-3">
+      {dailyGroups.map((d, idx) => (
+        <div key={idx} className="p-4 rounded-2xl 
+                                 bg-white dark:bg-gray-800 
+                                 border dark:border-gray-600 
+                                 shadow text-center">
+          <div className="text-sm text-gray-500 dark:text-gray-400">{formatDateISO(d.date)}</div>
+          <div className="text-3xl" title={`WMO ${d.wmo}`}>{wmoToEmoji(d.wmo)}</div>
+          <div className="mt-1 font-semibold text-gray-900 dark:text-gray-100">{Math.round(d.min)}{tempUnit} • {Math.round(d.max)}{tempUnit}</div>
+        </div>
+      ))}
+    </div>
+  </section>
+)}
 
-            {/* Extras */}
-            <div className="p-5 rounded-3xl bg-white shadow border">
-              <div className="text-sm text-gray-500">Extras</div>
-              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                <div>🌅 Sunrise: {dailyGroups?.[0]?.sunrise ? formatTimeISO(dailyGroups[0].sunrise) : "-"}</div>
-                <div>🌇 Sunset: {dailyGroups?.[0]?.sunset ? formatTimeISO(dailyGroups[0].sunset) : "-"}</div>
-                <div>🌧️ Precip (this hour): {current.precipitation ?? 0} mm</div>
-                <div>🌧️🌡️ Rain chance: {current.precipitation_probability ?? 0}%</div>
-              </div>
-              <div className="mt-3 text-xs text-gray-500">Updated: {new Date().toLocaleString("en-US")}</div>
-            </div>
-          </section>
-        )}
-
-        {/* HOURLY (1h steps) */}
-        {hourlyBlocks?.length > 0 && (
-          <section className="mt-6">
-            <h2 className="text-lg font-semibold mb-2">⏱️ Next 24 hours</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
-              {hourlyBlocks.map((h, idx) => (
-                <div key={idx} className="p-3 rounded-2xl bg-white border shadow text-center">
-                  <div className="text-sm text-gray-500">{formatTimeISO(h.time)}</div>
-                  <div className="text-2xl" title={`WMO ${h.wmo}`}>{wmoToEmoji(h.wmo)}</div>
-                  <div className="font-semibold">{Math.round(h.temp)}{tempUnit}</div>
-                  <div className="text-xs text-gray-600 truncate">💧RH {h.rh}% • POP {h.pop ?? 0}%</div>
-                  <div className="text-xs text-gray-500">🌬 {Math.round(h.ws ?? 0)} {windUnit} • 🧭 {h.wdir ?? "-"}°</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* DAILY (compact) */}
-        {dailyGroups?.length > 0 && (
-          <section className="mt-6">
-            <h2 className="text-lg font-semibold mb-2">📅 5‑day forecast</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-3">
-              {dailyGroups.map((d, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-white border shadow text-center">
-                  <div className="text-sm text-gray-500">{formatDateISO(d.date)}</div>
-                  <div className="text-3xl" title={`WMO ${d.wmo}`}>{wmoToEmoji(d.wmo)}</div>
-                  <div className="mt-1 font-semibold">{Math.round(d.min)}{tempUnit} • {Math.round(d.max)}{tempUnit}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* FOOTER */}
         <footer className="mt-10 text-center text-xs text-gray-500">
           Data from Open‑Meteo. Demo app for learning purposes.
         </footer>
       </div>
+    </div>
     </div>
   );
 }
